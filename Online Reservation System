@@ -1,0 +1,178 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.UUID;
+
+class User {
+    private String username;
+    private String password;
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+}
+
+class Reservation {
+    private String pnr;
+    private String trainNumber;
+    private String trainName;
+    private String classType;
+    private String journeyDate;
+    private String boarding;
+    private String destination;
+
+    public Reservation(String trainNumber, String trainName, String classType, String journeyDate, String boarding, String destination) {
+        this.pnr = UUID.randomUUID().toString().substring(0, 10);
+        this.trainNumber = trainNumber;
+        this.trainName = trainName;
+        this.classType = classType;
+        this.journeyDate = journeyDate;
+        this.boarding = boarding;
+        this.destination = destination;
+    }
+
+    public String getPnr() {
+        return pnr;
+    }
+
+    @Override
+    public String toString() {
+        return "PNR: " + pnr + "\nTrain Number: " + trainNumber + "\nTrain Name: " + trainName + "\nClass: " + classType +
+                "\nDate: " + journeyDate + "\nBoarding Station: " + boarding + "\nDestination Station: " + destination;
+    }
+}
+
+class Database {
+    private static Map<String, User> users = new HashMap<>();
+    private static Map<String, Reservation> reservations = new HashMap<>();
+
+    public static void addUser(String username, String password) {
+        users.put(username, new User(username, password));
+    }
+
+    public static User getUser(String username) {
+        return users.get(username);
+    }
+
+    public static String addReservation(String trainNumber, String trainName, String classType, String journeyDate, String boarding, String destination) {
+        Reservation res = new Reservation(trainNumber, trainName, classType, journeyDate, boarding, destination);
+        String pnr = res.getPnr();
+        reservations.put(pnr, res);
+        return pnr;
+    }
+
+    public static Reservation getReservation(String pnr) {
+        return reservations.get(pnr);
+    }
+
+    public static void removeReservation(String pnr) {
+        reservations.remove(pnr);
+    }
+}
+
+public class Online_Reservation_System {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Welcome to Online Reservation System!");
+
+        while (true) {
+            System.out.println("1. Login\n2. Register\n3. Exit");
+            int choice = sc.nextInt();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Enter your username: ");
+                    String username = sc.next();
+                    System.out.println("Enter your password: ");
+                    String password = sc.next();
+
+                    User user = Database.getUser(username);
+                    if (user != null && user.getPassword().equals(password)) {
+                        System.out.println("Login successful.");
+
+                        while (true) {
+                            System.out.println("1. Make Reservation\n2. Cancel Reservation\n3. Logout");
+                            int userChoice = sc.nextInt();
+                            sc.nextLine(); // Consume the newline character
+
+                            switch (userChoice) {
+                                case 1:
+                                    System.out.println("Enter Train Number: ");
+                                    String trainNumber = sc.nextLine();
+                                    System.out.println("Enter Train Name: ");
+                                    String trainName = sc.nextLine();
+                                    System.out.println("Enter Class Type: ");
+                                    String classType = sc.nextLine();
+                                    System.out.println("Enter Journey Date: ");
+                                    String journeyDate = sc.nextLine();
+                                    System.out.println("Enter Boarding Station: ");
+                                    String boarding = sc.nextLine();
+                                    System.out.println("Enter Destination Station: ");
+                                    String destination = sc.nextLine();
+
+                                    String pnr = Database.addReservation(trainNumber, trainName, classType, journeyDate, boarding, destination);
+                                    System.out.println("Reservation successful. Your PNR: " + pnr);
+                                    break;
+                                case 2:
+                                    System.out.println("Enter your PNR number: ");
+                                    String cancelPnr = sc.nextLine();
+                                    Reservation cancelReservation = Database.getReservation(cancelPnr);
+
+                                    if (cancelReservation != null) {
+                                        System.out.println("***** RESERVATION DETAILS *****\n" + cancelReservation.toString());
+                                        System.out.println("Press 'OK' to confirm cancellation.");
+                                        String input = sc.nextLine();
+
+                                        if (input.equalsIgnoreCase("OK")) {
+                                            Database.removeReservation(cancelPnr);
+                                            System.out.println("Cancellation successful.");
+                                        } else {
+                                            System.out.println("Cancellation aborted!");
+                                        }
+                                    } else {
+                                        System.out.println("Invalid PNR number!");
+                                    }
+                                    break;
+                                case 3:
+                                    System.out.println("Logout successful. Returning to main menu...");
+                                    break;
+                                default:
+                                    System.out.println("Invalid choice! Please try again.");
+                            }
+
+                            if (userChoice == 3) {
+                                break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Invalid username or password! Please try again.");
+                    }
+                    break;
+                case 2:
+                    System.out.println("Enter a username: ");
+                    String newUsername = sc.next();
+                    System.out.println("Enter a password: ");
+                    String newPassword = sc.next();
+
+                    Database.addUser(newUsername, newPassword);
+                    System.out.println("Registration successful.");
+                    break;
+                case 3:
+                    System.out.println("Thank you for using Online Reservation System. HAPPY JOURNEY!");
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.println("Invalid choice! Please try again.");
+            }
+        }
+    }
+}
